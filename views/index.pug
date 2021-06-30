@@ -1,0 +1,42 @@
+extends layout
+
+block main
+  .row
+    .col.s12.center-align
+      h1 Timelock Encryption
+      p A proof of concept approach to use timelock encrpytion with Drand to prevent front running attacks in blockchain
+  .row
+    .col.s6
+      .card.blue-grey.darken-1.hoverable
+        .card-content.white-text
+          span.card-title Encrypt a transaction
+          .row
+            .col.s6
+              a.waves-effect.waves-light.btn Get latest drand round
+            .col.s6
+              a.waves-effect.waves-light.btn Generate Random tx
+          blockquote Lets check how this works
+    .col.s6
+      .card.blue-grey.darken-1.hoverable
+        .card-content.white-text
+          span.card-title materialize test
+          p This is a Skeleton for a website using materialize.css
+          blockquote Lets check how this works
+  .row
+    .col.s12
+      .card.purple.darken-2.hoveralbe
+        .card-content.light-grey
+          span.card-title Status
+          h3 Current status 
+          p #{round}
+
+  .row
+    .col.s12
+      .card.teal.lighten-2.hoverable
+        .card-content.white-text 
+          span.card-title Progress
+          ul.collection.teal
+            li.collection-item 1
+            li.collection-item 1
+            li.collection-item 1
+    
