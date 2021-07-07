@@ -3,6 +3,10 @@ const https = require('https');
 const { hrtime } = require('process');
 var router = express.Router();
 const bls = require("noble-bls12-381");
+const { randomBytes, createHash } = await require('crypto');
+const utils = require("./utils");
+
+
 const chainHash = '8990e7a9aaed2ffed73dbd7092123d6f289930540d7651336225dc172e51b2ce'
 const urls = [
     'https://api.drand.sh',
@@ -18,6 +22,14 @@ const randomsig = '97f38c9824431f66742d5381ca31f927a6daafb536ca8fa0892ba829eaa3b
 
 
 
+
+// Encryption 
+// sigma -> random generation for message size
+// r = H3( sigma, M) -> zq* 
+// 1) rP
+// 2) sigma xor H2(pairing)
+// 3) M xor H4(sigma)
+
 async function fetch_randomness() {
   const { default: Client, HTTP } = await import('drand-client')
   const options = { chainHash }
@@ -26,7 +38,10 @@ async function fetch_randomness() {
   return res
 }
 
-async function check_pairing(){
+async function encrypt(message, round, distributedPublicKey){
+
+  const hexMessage = utils.bytesToHex(utils.str2Bytes(message));
+
   //rP
   const r = bls.utils.randomPrivateKey();
   const rP = bls.getPublicKey(r);
@@ -34,30 +49,78 @@ async function check_pairing(){
   // message for the H(m)
   let buf = Buffer.allocUnsafe(8);
   buf.writeBigInt64BE(BigInt(round));
-  var roundHash = await bls.utils.sha256(buf)
-  
+  var roundHash = await bls.utils.sha256(buf);
+
   // H(m) = xP
-  var Hround = await hashToCurve(roundHash);
+  var Hround = await utils.hashToCurve(roundHash);
 
   if (Hround.isOnCurve()){
     //rxP
-    var rHround = Hround.multiply(bytesToNumberBE(r));
+    var rHround = Hround.multiply(utils.bytesToNumberBE(r));
     //sP
     var Ppub = bls.PointG1.fromHex(distributedPublicKey);
     //e(rxP, sP)
-    var finalPairing = bls.pairing(Ppub, rHround);
-    console.log(finalPairing.toString());
+    var pairing = bls.pairing(Ppub, rHround);
+    
+    const xof = utils.getXOF(pairing.toString(), message.length);
+    var enc = utils.XORHex(hexMessage, xof);
+    console.log("Enc : " + enc);
+    console.log("Public Key : " + utils.bytesToHex(rP));
+  } 
+  else {
+    console.log("Point is not on curve");
   }
-
-  //rP
-  point1 = bls.PointG1.fromHex(bytesToHex(rP));
-  //xsP
-  point2 = bls.PointG2.fromSignature(randomsig);
-  //e(rP, xsP)
-  var pairing2 = bls.pairing(point1,point2);
   
-  console.log(pairing2.toString());
+}
 
+// Enc : 97333d60db66cd6be15e02
+// Public Key : 99edf08c9abd1c97467fc18c875c1bec5272226fe548f325bf44611e5019126478b38b77d3bcf446b890fda7295d704b
+
+
+async function decrypt(signature, enc, rP){
+  //rP
+  var point1 = bls.PointG1.fromHex(rP);
+  //xsP
+  var point2 = bls.PointG2.fromSignature(signature);
+  //e(rP, xsP)
+  var pairing = bls.pairing(point1,point2);
+
+  const xof = utils.getXOF(pairing.toString(), enc.length / 2);
+  
+  var message = utils.XORHex(enc, xof);
+  console.log("Message : " + utils.hexToStr(message));
+}
+
+encrypt("Golden rule", 107 , "89d49d0cc8bbf6c50af1bdb6bb5176b93b5ac4ed9b66b93f4df42b886a422a54f814bd23fbb07cbde33214abaaa9a65d");
+decrypt("97f38c9824431f66742d5381ca31f927a6daafb536ca8fa0892ba829eaa3b71339fe4521c5ee1c453e7bf3f3959c356a08005bfe93d6cd6f95e304193de9b1717cebf69d8aa6ab170d6e9f93760e605c657837092cd3774216921d0fef042d96", "97333d60db66cd6be15e02", "99edf08c9abd1c97467fc18c875c1bec5272226fe548f325bf44611e5019126478b38b77d3bcf446b890fda7295d704b");
+
+//ec72e76f5f0
+//rP :87efc85ca9998615216c128069894089b090985eaf5bd0a9dc1a403588478c0c335d73db89c03ebe615ff8634b7f25e2
+
+// Enc :8e8c618f865d49646fa4a9
+// rP :93200fc18ea745b902054934b26efea8e989a314849e36aa6e373d93bdd71175088ee75ac686b7a9dcd01e6435933f55
+
+// hex :476f6c64656e2072756c65
+// Enc :e7dfd8c2594ff1f3b45b7d
+// rP :aa064d29798f320d4e1e99587f6f8fcd996e570a9fcffad79f7ae06b018b2842282f0e76a44a20dd7d67ddd51439edd3
+
+// xof :91f6bc74d47146ca93dbc7
+// hex :476f6c64656e2072756c65
+// enc :d699d010b11f66b8e6b7a2
+// rP :84bd71851893ca6ef09cb2e19a560e872f2db4be678231494e4e2b51a5f8e37698d1057d2859113ab0dff8a45a8c1ce9
+
+async function check_pairing(){
+  
+  // sigma
+  const mSize = message.length;
+  const sigma = getRandom(mSize);
+  
+  // r = H3( sigma, M) -> zq* 
+  var h3Hash = await bls.utils.sha256(Buffer.concat([sigma, str2ab(message)]));
+  
+  
+  const r =  bls.utils.mod(bytesToNumberBE(h3Hash), bls.CURVE.r);
+  const rP = bls.getPublicKey(r);
 }
 
 /* GET home page. */
@@ -68,40 +131,6 @@ router.get('/', async (req, res) => {
   res.render('index', {round : randomness.round});
 });
 
-async function hashToCurve(message){
-  var result = await bls.PointG2.hashToCurve(message);
-  return result 
-}
-
-function bytesToNumberBE(bytes) {
-  let value = 0n;
-  for (let i = bytes.length - 1, j = 0; i >= 0; i--, j++) {
-      value += (BigInt(bytes[i]) & 255n) << (8n * BigInt(j));
-  }
-  return value;
-}
-
-function bytesToHex(uint8a) {
-  let hex = '';
-  for (let i = 0; i < uint8a.length; i++) {
-      hex += uint8a[i].toString(16).padStart(2, '0');
-  }
-  return hex;
-}
-
-function hexToBytes(hex) {
-  if (typeof hex !== 'string') {
-      throw new TypeError('hexToBytes: expected string, got ' + typeof hex);
-  }
-  if (hex.length % 2)
-      throw new Error('hexToBytes: received invalid unpadded hex');
-  const array = new Uint8Array(hex.length / 2);
-  for (let i = 0; i < array.length; i++) {
-      const j = i * 2;
-      array[i] = Number.parseInt(hex.slice(j, j + 2), 16);
-  }
-  return array;
-}
 
 
 
