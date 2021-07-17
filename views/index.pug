@@ -11,17 +11,49 @@ block main
         .card-content.white-text
           span.card-title Encrypt a transaction
           .row
+            p
+              .col.s6            
+                label
+                  input.with-gap(name='enc' id='round' type='radio' checked=true)
+                  span Round
+              .col.s6
+                label
+                  input.with-gap(name='enc' id='time' type='radio')
+                  span Time
+            .input-field.col.s12#rounddiv
+              input#round.validate(placeholder='123456' type='text')
+              label(for='round') Round to encrypt
+            #timediv
+              .input-field.col.s12
+                input.datepicker(type='text')
+                label Date
+              .input-field.col.s12
+                input.timepicker(type='text')
+                label Time
+            .input-field.col.s12
+              i.material-icons.prefix mode_edit
+              textarea#icon_prefix2.materialize-textarea
+              label(for='icon_prefix2') Message
+          .row 
             .col.s6
-              a.waves-effect.waves-light.btn Get latest drand round
+              a.waves-effect.waves-light.btn Validate
             .col.s6
-              a.waves-effect.waves-light.btn Generate Random tx
-          blockquote Lets check how this works
+              a.waves-effect.waves-light.btn Decrypt
+
     .col.s6
       .card.blue-grey.darken-1.hoverable
         .card-content.white-text
-          span.card-title materialize test
-          p This is a Skeleton for a website using materialize.css
-          blockquote Lets check how this works
+          span.card-title Decrypt a Transaction
+          .input-field.col.s12
+              i.material-icons.prefix mode_edit
+              textarea#icon_prefix2.materialize-textarea
+              label(for='icon_prefix2') Encrypted Message
+          .row 
+            .col.s6
+              a.waves-effect.waves-light.btn Validate
+            .col.s6
+              a.waves-effect.waves-light.btn Decrypt
+          blockquote This is where decrypted message will appear
   .row
     .col.s12
       .card.purple.darken-2.hoveralbe
@@ -30,13 +62,13 @@ block main
           h3 Current status 
           p #{round}
 
-  .row
-    .col.s12
-      .card.teal.lighten-2.hoverable
-        .card-content.white-text 
-          span.card-title Progress
-          ul.collection.teal
-            li.collection-item 1
-            li.collection-item 1
-            li.collection-item 1
+  //- .row
+  //-   .col.s12
+  //-     .card.teal.lighten-2.hoverable
+  //-       .card-content.white-text 
+  //-         span.card-title Progress
+  //-         ul.collection.teal
+  //-           li.collection-item 1
+  //-           li.collection-item 1
+  //-           li.collection-item 1
     
