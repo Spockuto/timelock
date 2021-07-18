@@ -3,64 +3,65 @@ extends layout
 block main
   .row
     .col.s12.center-align
-      h1 Timelock Encryption
-      p A proof of concept approach to use timelock encrpytion with Drand to prevent front running attacks in blockchain
+      .card.teal.lighten-2.hoverable
+        .card-content
+          h1 Timelock Encryption
+          p A proof of concept approach to use timelock encrpytion with Drand to prevent front running attacks in blockchain
   .row
     .col.s6
-      .card.blue-grey.darken-1.hoverable
+      .card.teal.darken-3.hoverable
         .card-content.white-text
           span.card-title Encrypt a transaction
           .row
             p
-              .col.s6            
-                label
-                  input.with-gap(name='enc' id='round' type='radio' checked=true)
-                  span Round
               .col.s6
                 label
-                  input.with-gap(name='enc' id='time' type='radio')
+                  input.with-gap(name='enc' id='time' type='radio' checked=true)
                   span Time
+              .col.s6            
+                label
+                  input.with-gap(name='enc' id='round' type='radio')
+                  span Round
             .input-field.col.s12#rounddiv
-              input#round.validate(placeholder='123456' type='text')
-              label(for='round') Round to encrypt
+              input#roundno.validate(type='text')
+              label(for='roundno') Round to encrypt
             #timediv
-              .input-field.col.s12
+              .input-field.col.s12.black-text
                 input.datepicker(type='text')
                 label Date
-              .input-field.col.s12
+              .input-field.col.s12.black-text
                 input.timepicker(type='text')
                 label Time
             .input-field.col.s12
               i.material-icons.prefix mode_edit
-              textarea#icon_prefix2.materialize-textarea
-              label(for='icon_prefix2') Message
+              textarea#message.materialize-textarea
+              label(for='message') Message
           .row 
             .col.s6
-              a.waves-effect.waves-light.btn Validate
+              a.waves-effect.waves-light.btn(onclick='current()') Current round
             .col.s6
-              a.waves-effect.waves-light.btn Decrypt
+              a.waves-effect.waves-light.btn(onclick='encrypt()') Encrypt
+          blockquote#encresult.card-content This is where Encrypted message will appear
 
     .col.s6
-      .card.blue-grey.darken-1.hoverable
+      .card.teal.darken-3.hoverable
         .card-content.white-text
-          span.card-title Decrypt a Transaction
+          span.card-title Decrypt a transaction
           .input-field.col.s12
               i.material-icons.prefix mode_edit
-              textarea#icon_prefix2.materialize-textarea
-              label(for='icon_prefix2') Encrypted Message
+              textarea#enc.materialize-textarea
+              label(for='enc') Encrypted Message
           .row 
-            .col.s6
-              a.waves-effect.waves-light.btn Validate
-            .col.s6
-              a.waves-effect.waves-light.btn Decrypt
-          blockquote This is where decrypted message will appear
-  .row
-    .col.s12
-      .card.purple.darken-2.hoveralbe
-        .card-content.light-grey
-          span.card-title Status
-          h3 Current status 
-          p #{round}
+            .col.s12
+              a.waves-effect.waves-light.btn(onclick='decrypt()') Decrypt
+          blockquote#decresult.card-content This is where decrypted message will appear
+  //- .row
+  //-   .col.s12
+  //-     .card.purple.darken-2.hoveralbe
+  //-       .card-content.light-grey
+  //-         span.card-title Status
+  //-         h3 Current status 
+  //-         p #{round}
 
   //- .row
   //-   .col.s12

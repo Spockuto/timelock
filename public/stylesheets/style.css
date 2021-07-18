@@ -7,3 +7,11 @@ body {
 main {
   flex: 1 0 auto;
 }
+
+#encresult, #decresult {
+  word-break: break-all;
+}
+
+footer{
+  flex-shrink: 0;
+}
