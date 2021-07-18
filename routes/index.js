@@ -4,7 +4,7 @@ const { hrtime } = require('process');
 var router = express.Router();
 const ecc_crypto = require("./crypto")
 
-const round = 218;
+const round = 28;
 
 
 /* GET home page. */
@@ -14,7 +14,6 @@ router.get('/', async (req, res) => {
 
   // Testing
   var enc = await ecc_crypto.encrypt("This is a test message to check if the encryption works", round);
-  console.log(enc);
   ecc_crypto.decrypt(enc);
 
   res.render('index', {round : randomness.round});
@@ -24,9 +23,6 @@ router.post('/encrypt', async (req, res) => {
   var round = parseInt(req.body.round, 10);
   const message = req.body.message;
   const timeBool = (req.body.timeBool === 'true');
-  console.log(round);
-  console.log(message);
-  console.log(timeBool);
 
   if (Boolean(timeBool)){
     round = await ecc_crypto.fetch_round(round);
@@ -54,22 +50,5 @@ router.get('/current', async (req, res) => {
   res.send({round : current.round});
 });
 
-
-
-
-
-// async function check_pairing(){
-  
-//   // sigma
-//   const mSize = message.length;
-//   const sigma = getRandom(mSize);
-  
-//   // r = H3( sigma, M) -> zq* 
-//   var h3Hash = await bls.utils.sha256(Buffer.concat([sigma, str2ab(message)]));
-  
-  
-//   const r =  bls.utils.mod(bytesToNumberBE(h3Hash), bls.CURVE.r);
-//   const rP = bls.getPublicKey(r);
-// }
 
 module.exports = router;

@@ -1,12 +1,11 @@
 const bls = require("noble-bls12-381");
 const { randomBytes, createHash } = require('crypto');
 const utils = require("./utils");
+const config = require('config');
 
 
-const chainHash = "78c34edd50674313de43b112dd4e71ffcdfb547e91b66d41ba80470969888c70"
-const urls = [
-  'http://127.0.0.5:44511'
-]
+const chainHash = config.get('chainHash');
+const urls = config.get('urls');
 
 async function getClient(){
   const { default: Client, HTTP } = await import('drand-client')
@@ -42,6 +41,12 @@ async function fetch_current() {
   return res
 }
 
+async function round_validate(round){
+  const current = await fetch_current();
+  if (current.round <= round)
+    return true
+  return false
+}
 
 
 async function encrypt(message, round){
@@ -51,9 +56,14 @@ async function encrypt(message, round){
   distributedPublicKey = info.public_key;
   const hexMessage = utils.bytesToHex(utils.str2Bytes(message));
 
-  //rP
-  const r = bls.utils.randomPrivateKey();
+  const mSize = message.length;
+  const sigma = utils.getRandom(mSize);
+  
+  // r = H3( sigma, M) -> zq* 
+  var h3Hash = await bls.utils.sha256(Buffer.concat([sigma, utils.str2Bytes(message)]));  
+  const r =  bls.utils.mod(utils.bytesToNumberBE(h3Hash), bls.CURVE.r);
   const rP = bls.getPublicKey(r);
+
 
   // message for the H(m)
   let buf = Buffer.allocUnsafe(8);
@@ -65,19 +75,17 @@ async function encrypt(message, round){
 
   if (Hround.isOnCurve()){
     //rxP
-    var rHround = Hround.multiply(utils.bytesToNumberBE(r));
+    var rHround = Hround.multiply(r);
     //sP
     var Ppub = bls.PointG1.fromHex(distributedPublicKey);
     //e(rxP, sP)
     var pairing = bls.pairing(Ppub, rHround);
     
-    const xof = utils.getXOF(pairing.toString(), message.length);
-    var enc = utils.XORHex(hexMessage, xof);
+    const xof = utils.getXOF(pairing.toString(), mSize);
+    var sig = utils.XORHex(utils.bytesToHex(sigma), xof);
 
-    console.log("Round : " + round);
-    console.log("Public Key : " + utils.bytesToHex(rP));
-    console.log("Enc : " + enc);
-    
+    const xof2 = utils.getXOF(utils.bytesToHex(sigma), mSize);
+    var enc = utils.XORHex(hexMessage, xof2);
   } 
   else {
     console.log("Point is not on curve");
@@ -85,28 +93,26 @@ async function encrypt(message, round){
   }
 
   var result;
-  result =  round.toString() + "||" + utils.bytesToHex(rP) + "||" + enc;
+  result =  round.toString() + "||" + utils.bytesToHex(rP) + "||" + sig + "||" + enc;
   return Buffer.from(result).toString('base64');
 
 }
   
 async function decrypt(enc){
   const split = Buffer.from(enc, 'base64').toString('ascii').split("||");
-  console.log(split);
 
-  if (split.length != 3) {
-    return "Encrypted message is not formatted properly"
-  }
-  
   const round = parseInt(split[0], 10);
   const current = await fetch_current();
   if (round > current.round){
     return "Current round is " + current.round +". Please wait till " + round;
   }
 
-  
+  if (split.length != 4) {
+    return "Encrypted message is not formatted properly!"
+  }
   const rP = split[1];
-  enc = split[2];
+  const sigXOR = split[2];
+  encXOR = split[3];
 
   var signature;
   var randomness = await fetch_randomness(round, false);
@@ -119,19 +125,23 @@ async function decrypt(enc){
   //e(rP, xsP)
   var pairing = bls.pairing(point1,point2);
 
-  const xof = utils.getXOF(pairing.toString(), enc.length / 2);
-  
-  var message = utils.XORHex(enc, xof);
+  const xof = utils.getXOF(pairing.toString(), encXOR.length / 2);
+  var sigma = utils.XORHex(sigXOR, xof);
+
+  const xof2 = utils.getXOF(sigma, encXOR.length / 2);
+  var message = utils.XORHex(encXOR, xof2);
+
   console.log("Message : " + utils.hexToStr(message));
 
-  return utils.hexToStr(message);
-}
+  var h3Hash = await bls.utils.sha256(Buffer.concat([utils.hexToBytes(sigma), utils.str2Bytes(utils.hexToStr(message))]));  
+  const r =  bls.utils.mod(utils.bytesToNumberBE(h3Hash), bls.CURVE.r);
+  const rPdash = utils.bytesToHex(bls.getPublicKey(r));
 
-async function round_validate(round){
-  const current = await fetch_current();
-  if (current.round <= round)
-    return true
-  return false
+  if(rP == rPdash){
+    return utils.hexToStr(message);
+  }
+  
+  return "Encrypted message is not formatted properly!";
 }
 
 

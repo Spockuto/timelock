@@ -57,16 +57,12 @@ document.addEventListener('DOMContentLoaded', function() {
 function captureTime(hours, minutes){
     roundDate.setHours(hours);
     roundDate.setMinutes(minutes);
-    console.log(roundDate);
-    console.log(roundDate.getTime());
 }
 
 function captureDate(date){
     roundDate.setDate(date.getDate());
     roundDate.setMonth(date.getMonth());
     roundDate.setFullYear(date.getFullYear());
-    console.log(roundDate);
-    console.log(roundDate.getTime());
 }
 
 function encrypt(){
@@ -83,7 +79,6 @@ function encrypt(){
     var message = $("#message").val();
 
     $.post("http://localhost:3000/encrypt", {round: round, message: message , timeBool : timeBool}, function(result){
-        console.log(result.enc);
         $("#encresult").text(result.enc);
     });
 }
@@ -91,7 +86,6 @@ function encrypt(){
 function decrypt(){
     var enc = $("#enc").val();
     $.post("http://localhost:3000/decrypt", {enc: enc}, function(result){
-        console.log(result);
         $("#decresult").text(result.message);
     });
 }

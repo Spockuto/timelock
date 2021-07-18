@@ -6,9 +6,9 @@ block main
       .card.teal.lighten-2.hoverable
         .card-content
           h1 Timelock Encryption
-          p A proof of concept to demonstrate timelock encrpytion with Drand DKG for preventing front running attacks in blockchain
+          p A proof of concept to demonstrate timelock encrpytion with Drand DKG for prevent front running attacks in blockchain
   .row
-    .col.s6
+    .col.m6.s12
       .card.teal.darken-3.hoverable
         .card-content.white-text
           span.card-title Encrypt a transaction
@@ -42,8 +42,7 @@ block main
             .col.s6
               a.waves-effect.waves-light.btn#encbutton(onclick='encrypt()',disabled="disabled") Encrypt
           blockquote#encresult.card-content This is where encrypted message will appear
-
-    .col.s6
+    .col.m6.s12
       .card.teal.darken-3.hoverable
         .card-content.white-text
           span.card-title Decrypt a transaction
@@ -55,21 +54,3 @@ block main
             .col.s12
               a.waves-effect.waves-light.btn#decbutton(onclick='decrypt()',disabled="disabled") Decrypt
           blockquote#decresult.card-content This is where decrypted message will appear
-  //- .row
-  //-   .col.s12
-  //-     .card.purple.darken-2.hoveralbe
-  //-       .card-content.light-grey
-  //-         span.card-title Status
-  //-         h3 Current status 
-  //-         p #{round}
-
-  //- .row
-  //-   .col.s12
-  //-     .card.teal.lighten-2.hoverable
-  //-       .card-content.white-text 
-  //-         span.card-title Progress
-  //-         ul.collection.teal
-  //-           li.collection-item 1
-  //-           li.collection-item 1
-  //-           li.collection-item 1
-    
