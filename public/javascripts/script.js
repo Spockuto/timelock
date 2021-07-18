@@ -30,7 +30,27 @@ document.addEventListener('DOMContentLoaded', function() {
             $("#timediv").show();
             $("#rounddiv").hide();
         }
-      });
+    });
+
+    $('#message').on('input', function(e) {
+        var message = $("#message").val();
+        if (message.length < 2){
+            $("#encbutton").attr('disabled','disabled');
+        }
+        else {
+            $("#encbutton").removeAttr('disabled');
+        }
+    });
+
+    $('#enc').on('input', function(e) {
+        var message = $("#enc").val();
+        if (message.length < 20){
+            $("#decbutton").attr('disabled','disabled');
+        }
+        else {
+            $("#decbutton").removeAttr('disabled');
+        }
+    });
     
 });
 
@@ -81,3 +101,4 @@ function current(){
         $("#encresult").text( "The current round is " + data.round);
     })
 }
+

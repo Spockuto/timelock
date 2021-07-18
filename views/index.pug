@@ -6,7 +6,7 @@ block main
       .card.teal.lighten-2.hoverable
         .card-content
           h1 Timelock Encryption
-          p A proof of concept approach to use timelock encrpytion with Drand to prevent front running attacks in blockchain
+          p A proof of concept to demonstrate timelock encrpytion with Drand DKG for preventing front running attacks in blockchain
   .row
     .col.s6
       .card.teal.darken-3.hoverable
@@ -24,7 +24,7 @@ block main
                   span Round
             .input-field.col.s12#rounddiv
               input#roundno.validate(type='text')
-              label(for='roundno') Round to encrypt
+              label(for='roundno') Round
             #timediv
               .input-field.col.s12.black-text
                 input.datepicker(type='text')
@@ -40,8 +40,8 @@ block main
             .col.s6
               a.waves-effect.waves-light.btn(onclick='current()') Current round
             .col.s6
-              a.waves-effect.waves-light.btn(onclick='encrypt()') Encrypt
-          blockquote#encresult.card-content This is where Encrypted message will appear
+              a.waves-effect.waves-light.btn#encbutton(onclick='encrypt()',disabled="disabled") Encrypt
+          blockquote#encresult.card-content This is where encrypted message will appear
 
     .col.s6
       .card.teal.darken-3.hoverable
@@ -50,10 +50,10 @@ block main
           .input-field.col.s12
               i.material-icons.prefix mode_edit
               textarea#enc.materialize-textarea
-              label(for='enc') Encrypted Message
+              label(for='enc') Encrypted message
           .row 
             .col.s12
-              a.waves-effect.waves-light.btn(onclick='decrypt()') Decrypt
+              a.waves-effect.waves-light.btn#decbutton(onclick='decrypt()',disabled="disabled") Decrypt
           blockquote#decresult.card-content This is where decrypted message will appear
   //- .row
   //-   .col.s12

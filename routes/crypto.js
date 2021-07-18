@@ -94,11 +94,17 @@ async function decrypt(enc){
   const split = Buffer.from(enc, 'base64').toString('ascii').split("||");
   console.log(split);
 
+  if (split.length != 3) {
+    return "Encrypted message is not formatted properly"
+  }
+  
   const round = parseInt(split[0], 10);
   const current = await fetch_current();
   if (round > current.round){
     return "Current round is " + current.round +". Please wait till " + round;
   }
+
+  
   const rP = split[1];
   enc = split[2];
 
