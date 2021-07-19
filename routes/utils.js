@@ -1,5 +1,5 @@
 const bls = require("noble-bls12-381");
-const { randomBytes, createHash } = require('crypto');
+const _crypto = require('crypto');
 
 
 async function hashToCurve(message){
@@ -38,7 +38,7 @@ function hexToBytes(hex) {
 }
   
 function getRandom(bytesLength){
-    return new Uint8Array(randomBytes(bytesLength).buffer);
+    return new Uint8Array(_crypto.randomBytes(bytesLength).buffer);
 }
   
 function str2Bytes(str) {
@@ -51,7 +51,7 @@ function str2Bytes(str) {
 }
   
 function getXOF(pairing, length){
-    return createHash("shake256", { outputLength: length })
+    return _crypto.createHash("shake256", { outputLength: length })
         .update(pairing)
         .digest("hex");
 }

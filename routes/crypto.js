@@ -1,5 +1,6 @@
 const bls = require("noble-bls12-381");
-const { randomBytes, createHash } = require('crypto');
+const _crypto = require('crypto');
+const buffer = require('buffer');
 const utils = require("./utils");
 const config = require('config');
 
@@ -84,8 +85,11 @@ async function encrypt(message, round){
     const xof = utils.getXOF(pairing.toString(), mSize);
     var sig = utils.XORHex(utils.bytesToHex(sigma), xof);
 
-    const xof2 = utils.getXOF(utils.bytesToHex(sigma), mSize);
-    var enc = utils.XORHex(hexMessage, xof2);
+    const xof2 = utils.getXOF(utils.bytesToHex(sigma), 32);
+
+    var auth = round.toString() + "||" + utils.bytesToHex(rP) + "||" + sig;
+    var enc = aesEncrypt(message, xof2, auth);
+    
   } 
   else {
     console.log("Point is not on curve");
@@ -93,7 +97,7 @@ async function encrypt(message, round){
   }
 
   var result;
-  result =  round.toString() + "||" + utils.bytesToHex(rP) + "||" + sig + "||" + enc;
+  result =  auth + "||" + enc;
   return Buffer.from(result).toString('base64');
 
 }
@@ -112,7 +116,7 @@ async function decrypt(enc){
   }
   const rP = split[1];
   const sigXOR = split[2];
-  encXOR = split[3];
+  encAES = split[3];
 
   var signature;
   var randomness = await fetch_randomness(round, false);
@@ -125,23 +129,52 @@ async function decrypt(enc){
   //e(rP, xsP)
   var pairing = bls.pairing(point1,point2);
 
-  const xof = utils.getXOF(pairing.toString(), encXOR.length / 2);
+  const xof = utils.getXOF(pairing.toString(), sigXOR.length / 2);
   var sigma = utils.XORHex(sigXOR, xof);
 
-  const xof2 = utils.getXOF(sigma, encXOR.length / 2);
-  var message = utils.XORHex(encXOR, xof2);
+  const xof2 = utils.getXOF(sigma, 32);
+  var message = aesDecrypt(encAES, xof2, split[0] + "||" + split[1] + "||" + split[2])
 
-  console.log("Message : " + utils.hexToStr(message));
+  console.log("Message : " + message);
 
-  var h3Hash = await bls.utils.sha256(Buffer.concat([utils.hexToBytes(sigma), utils.str2Bytes(utils.hexToStr(message))]));  
+  var h3Hash = await bls.utils.sha256(Buffer.concat([utils.hexToBytes(sigma), utils.str2Bytes(message)]));  
   const r =  bls.utils.mod(utils.bytesToNumberBE(h3Hash), bls.CURVE.r);
   const rPdash = utils.bytesToHex(bls.getPublicKey(r));
 
   if(rP == rPdash){
-    return utils.hexToStr(message);
+    return message;
   }
   
   return "Encrypted message is not formatted properly!";
+}
+
+function aesEncrypt(message, key, auth){
+  const iv = utils.getRandom(12);
+  const keyBuffer = utils.hexToBytes(key);
+  const authBuffer = utils.str2Bytes(auth);
+
+  const cipher = _crypto.createCipheriv('aes-256-gcm', keyBuffer, iv);
+  cipher.setAAD(authBuffer);
+  let encrypted = cipher.update(message, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  return  utils.bytesToHex(iv) + "~~" + utils.bytesToHex(cipher.getAuthTag()) + "~~" + encrypted;
+}
+
+function aesDecrypt(encrypt, key, auth){
+  const split = encrypt.split("~~");
+  const iv = utils.hexToBytes(split[0]);
+  const tag = utils.hexToBytes(split[1]);
+  const keyBuffer = utils.hexToBytes(key);
+  const authBuffer = utils.str2Bytes(auth);
+  const enc = split[2];
+
+  const cipher = _crypto.createDecipheriv('aes-256-gcm', keyBuffer, iv);
+  cipher.setAAD(authBuffer);
+  cipher.setAuthTag(tag);
+
+  let decrypted = cipher.update(enc, 'hex', 'utf-8');
+  decrypted += cipher.final('utf-8');
+  return  decrypted;
 }
 
 

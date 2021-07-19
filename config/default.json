@@ -1,7 +1,7 @@
 {
-    "chainHash" : "43d4784e9aa3db960d120b3553353be5b6635d7a95bf88831561dfdb3c7c8099" ,
+    "chainHash" : "fb5f1e37230df7937e863f4310c67f93895d150f9bb17d1217cf5022e1f5ffc3" ,
     "urls" : [
-        "http://127.0.0.5:39111"
+        "http://127.0.0.9:32793"
     ] 
 
 }
