@@ -78,20 +78,20 @@ function encrypt(){
     }
     var message = $("#message").val();
 
-    $.post("http://localhost:3000/encrypt", {round: round, message: message , timeBool : timeBool}, function(result){
+    $.post("encrypt", {round: round, message: message , timeBool : timeBool}, function(result){
         $("#encresult").text(result.enc);
     });
 }
 
 function decrypt(){
     var enc = $("#enc").val();
-    $.post("http://localhost:3000/decrypt", {enc: enc}, function(result){
+    $.post("decrypt", {enc: enc}, function(result){
         $("#decresult").text(result.message);
     });
 }
 
 function current(){
-    $.get("http://localhost:3000/current" , function(data){
+    $.get("current" , function(data){
         $("#encresult").text( "The current round is " + data.round);
     })
 }

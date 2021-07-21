@@ -14,6 +14,10 @@ var usersRouter = require('./routes/users');
 
 var app = express();
 
+var server = app.listen(process.env.PORT || 5000, () => {
+  console.log('Server is started on 127.0.0.1:'+ (process.env.PORT || 5000))
+})
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
@@ -42,5 +46,6 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
+
 
 module.exports = app;
