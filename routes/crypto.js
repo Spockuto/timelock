@@ -59,47 +59,32 @@ async function encrypt(message, round){
 
   const mSize = message.length;
   const sigma = utils.getRandom(mSize);
-  
-  // r = H3( sigma, M) -> zq* 
   var h3Hash = await bls.utils.sha256(Buffer.concat([sigma, utils.str2Bytes(message)]));  
   const r =  bls.utils.mod(utils.bytesToNumberBE(h3Hash), bls.CURVE.r);
   const rP = bls.getPublicKey(r);
-
-
-  // message for the H(m)
   let buf = Buffer.allocUnsafe(8);
   buf.writeBigInt64BE(BigInt(round));
   var roundHash = await bls.utils.sha256(buf);
-
-  // H(m) = xP
   var Hround = await utils.hashToCurve(roundHash);
 
   if (Hround.isOnCurve()){
-    //rxP
+
     var rHround = Hround.multiply(r);
-    //sP
     var Ppub = bls.PointG1.fromHex(distributedPublicKey);
-    //e(rxP, sP)
     var pairing = bls.pairing(Ppub, rHround);
-    
     const xof = utils.getXOF(pairing.toString(), mSize);
     var sig = utils.XORHex(utils.bytesToHex(sigma), xof);
-
     const xof2 = utils.getXOF(utils.bytesToHex(sigma), 32);
-
     var auth = round.toString() + "||" + utils.bytesToHex(rP) + "||" + sig;
     var enc = aesEncrypt(message, xof2, auth);
-    
   } 
   else {
     console.log("Point is not on curve");
     return;
   }
-
   var result;
   result =  auth + "||" + enc;
   return Buffer.from(result).toString('base64');
-
 }
   
 async function decrypt(enc){
@@ -121,22 +106,13 @@ async function decrypt(enc){
   var signature;
   var randomness = await fetch_randomness(round, false);
   signature = randomness.signaturev2;
-
-  //rP
   var point1 = bls.PointG1.fromHex(rP);
-  //xsP
   var point2 = bls.PointG2.fromSignature(signature);
-  //e(rP, xsP)
   var pairing = bls.pairing(point1,point2);
-
   const xof = utils.getXOF(pairing.toString(), sigXOR.length / 2);
   var sigma = utils.XORHex(sigXOR, xof);
-
   const xof2 = utils.getXOF(sigma, 32);
   var message = aesDecrypt(encAES, xof2, split[0] + "||" + split[1] + "||" + split[2])
-
-  console.log("Message : " + message);
-
   var h3Hash = await bls.utils.sha256(Buffer.concat([utils.hexToBytes(sigma), utils.str2Bytes(message)]));  
   const r =  bls.utils.mod(utils.bytesToNumberBE(h3Hash), bls.CURVE.r);
   const rPdash = utils.bytesToHex(bls.getPublicKey(r));

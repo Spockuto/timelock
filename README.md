@@ -1,6 +1,6 @@
 # Timelock Encryption
 
-Proof of concept to demonstrate timelock encrpytion with Drand DKG for prevent front running attacks in blockchain
+Proof of concept to demonstrate timelock encryption with Drand DKG for prevent front running attacks in blockchain.
 
 ## Configuration
 DRand public parameters needs to configured at ``config/default.json``
@@ -21,4 +21,4 @@ cd timelock
 npm install
 npm start
 ```
-Visit the website at ``localhost:3000``
+Visit the website at ``localhost:5000``
